@@ -6,21 +6,30 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import:playlists": "tsx --tsconfig tsconfig.json scripts/import-playlists.ts",
+    "seed:quiz-questions": "tsx --tsconfig tsconfig.json scripts/seed-quiz-questions-from-bank.ts",
+    "seed:g7-students": "tsx --tsconfig tsconfig.json scripts/seed-g7-class-students.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.101.0",
+    "jose": "^6.2.2",
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

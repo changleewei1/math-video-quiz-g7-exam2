@@ -46,6 +46,8 @@ export type ReportSummary = {
 export type StudentReportDto = {
   generatedAt: string;
   audience: "admin" | "parent";
+  /** 圖表與摘要是否僅限某一學習任務內之影片／測驗 */
+  scopedToTask: boolean;
   student: {
     displayName: string;
     className: string | null;
@@ -125,7 +127,28 @@ export class StudentReportService {
       skillNameByCode.set(row.code, row.name);
     }
 
-    const radar = await this.buildRadar(supabase, student.id, skillNameByCode);
+    let taskOrderedVideos: { videoId: string; dayIndex: number }[] = [];
+    if (input.taskId) {
+      const { data: tvs } = await supabase
+        .from("task_videos")
+        .select("video_id, day_index")
+        .eq("task_id", input.taskId)
+        .order("day_index");
+      for (const row of tvs ?? []) {
+        const r = row as { video_id: string; day_index: number };
+        taskOrderedVideos.push({ videoId: r.video_id, dayIndex: r.day_index });
+      }
+    }
+    const scopedToTask = Boolean(input.taskId && taskOrderedVideos.length > 0);
+
+    const radar = scopedToTask
+      ? await this.buildRadarForTaskVideos(
+          supabase,
+          student.id,
+          taskOrderedVideos.map((v) => v.videoId),
+          skillNameByCode,
+        )
+      : await this.buildRadar(supabase, student.id, skillNameByCode);
 
     const unitIds: string[] = [];
     const videoIdsInScope: string[] = [];
@@ -152,12 +175,9 @@ export class StudentReportService {
       }
     }
 
-    const videoQuiz = await this.buildVideoQuizStats(
-      supabase,
-      student.id,
-      unitsMeta,
-      videoIdsInScope,
-    );
+    const videoQuiz = scopedToTask
+      ? await this.buildTaskVideoQuizStats(supabase, student.id, input.taskId!, taskOrderedVideos)
+      : await this.buildVideoQuizStats(supabase, student.id, unitsMeta, videoIdsInScope);
     const pieVideo = videoQuiz.progress;
     const barUnits = videoQuiz.barUnits;
 
@@ -168,7 +188,13 @@ export class StudentReportService {
       input.taskId ?? null,
     );
 
-    let summary = this.buildSummary(radar, pieVideo, videoQuiz.quizTotalInScope, videoQuiz.quizPassedCount);
+    let summary = this.buildSummary(
+      radar,
+      pieVideo,
+      videoQuiz.quizTotalInScope,
+      videoQuiz.quizPassedCount,
+      scopedToTask ? "task" : "exam_scope",
+    );
 
     const weakCodes = summary.weakSkills.map((w) => w.skillCode);
     summary = await this.withSuggestedVideos(supabase, summary, weakCodes);
@@ -188,6 +214,7 @@ export class StudentReportService {
     return {
       generatedAt: new Date().toISOString(),
       audience: input.audience,
+      scopedToTask,
       student: displayStudent,
       examScope: examScopeId && examScopeTitle ? { id: examScopeId, title: examScopeTitle } : null,
       task: gantt
@@ -249,6 +276,156 @@ export class StudentReportService {
         accuracy,
       };
     });
+  }
+
+  /** 僅統計指定任務內影片所綁定測驗之作答 */
+  private async buildRadarForTaskVideos(
+    supabase: ReturnType<typeof getSupabaseAdmin>,
+    studentId: string,
+    videoIds: string[],
+    skillNameByCode: Map<string, string>,
+  ): Promise<RadarDatum[]> {
+    if (videoIds.length === 0) return [];
+    const { data: quizzes } = await supabase.from("quizzes").select("id").in("video_id", videoIds);
+    const quizIds = [...new Set((quizzes ?? []).map((q: { id: string }) => q.id))];
+    if (quizIds.length === 0) return [];
+
+    const { data: attempts } = await supabase
+      .from("student_quiz_attempts")
+      .select("id")
+      .eq("student_id", studentId)
+      .in("quiz_id", quizIds)
+      .not("submitted_at", "is", null);
+    const attemptIds = (attempts ?? []).map((a: { id: string }) => a.id);
+    if (attemptIds.length === 0) return [];
+
+    const { data: answers } = await supabase
+      .from("student_quiz_answers")
+      .select("is_correct, quiz_questions(skill_code)")
+      .in("attempt_id", attemptIds);
+
+    const map = new Map<string, { ok: number; n: number }>();
+    for (const row of answers ?? []) {
+      const r = row as unknown as {
+        is_correct: boolean;
+        quiz_questions: { skill_code: string } | { skill_code: string }[] | null;
+      };
+      const q = r.quiz_questions;
+      const code = Array.isArray(q) ? q[0]?.skill_code : q?.skill_code;
+      const skillCode = code ?? "—";
+      const cur = map.get(skillCode) ?? { ok: 0, n: 0 };
+      cur.n += 1;
+      if (r.is_correct) cur.ok += 1;
+      map.set(skillCode, cur);
+    }
+
+    return [...map.entries()].map(([skillCode, v]) => {
+      const accuracy = v.n === 0 ? 0 : Math.round((v.ok / v.n) * 1000) / 10;
+      return {
+        skillCode,
+        skillName: skillNameByCode.get(skillCode) ?? skillCode,
+        total: v.n,
+        correct: v.ok,
+        accuracy,
+      };
+    });
+  }
+
+  private async buildTaskVideoQuizStats(
+    supabase: ReturnType<typeof getSupabaseAdmin>,
+    studentId: string,
+    taskId: string,
+    orderedVideos: { videoId: string; dayIndex: number }[],
+  ): Promise<{
+    progress: { completed: number; incomplete: number };
+    barUnits: UnitBarDatum[];
+    quizTotalInScope: number;
+    quizPassedCount: number;
+  }> {
+    const videoIds = orderedVideos.map((v) => v.videoId);
+    if (videoIds.length === 0) {
+      return {
+        progress: { completed: 0, incomplete: 0 },
+        barUnits: [],
+        quizTotalInScope: 0,
+        quizPassedCount: 0,
+      };
+    }
+
+    const { data: stp } = await supabase
+      .from("student_task_progress")
+      .select("video_id, is_completed")
+      .eq("student_id", studentId)
+      .eq("task_id", taskId)
+      .in("video_id", videoIds);
+
+    const doneSet = new Set<string>();
+    for (const row of stp ?? []) {
+      const r = row as { video_id: string; is_completed: boolean };
+      if (r.is_completed) doneSet.add(r.video_id);
+    }
+    const completed = doneSet.size;
+    const incomplete = videoIds.length - completed;
+
+    const { data: vrows } = await supabase.from("videos").select("id, title").in("id", videoIds);
+    const titleById = new Map(
+      (vrows ?? []).map((v: { id: string; title: string }) => [v.id, v.title]),
+    );
+
+    const { data: scopeQuizzes } = await supabase
+      .from("quizzes")
+      .select("id, video_id")
+      .in("video_id", videoIds);
+    const quizByVideo = new Map<string, string>();
+    for (const q of scopeQuizzes ?? []) {
+      const row = q as { id: string; video_id: string };
+      quizByVideo.set(row.video_id, row.id);
+    }
+
+    const quizIds = [...new Set([...quizByVideo.values()])];
+    const quizTotalInScope = quizIds.length;
+
+    let quizPassedCount = 0;
+    const latestPassedByQuiz = new Map<string, boolean>();
+    if (quizIds.length > 0) {
+      const { data: attRows } = await supabase
+        .from("student_quiz_attempts")
+        .select("quiz_id, is_passed, submitted_at")
+        .eq("student_id", studentId)
+        .in("quiz_id", quizIds)
+        .not("submitted_at", "is", null)
+        .order("submitted_at", { ascending: false });
+      for (const a of attRows ?? []) {
+        const row = a as { quiz_id: string; is_passed: boolean };
+        if (!latestPassedByQuiz.has(row.quiz_id)) {
+          latestPassedByQuiz.set(row.quiz_id, row.is_passed);
+        }
+      }
+      for (const p of latestPassedByQuiz.values()) {
+        if (p) quizPassedCount += 1;
+      }
+    }
+
+    const barUnits: UnitBarDatum[] = [];
+    for (const { videoId, dayIndex } of orderedVideos) {
+      const title = titleById.get(videoId) ?? "影片";
+      const shortTitle = title.length > 12 ? `${title.slice(0, 12)}…` : title;
+      const unitTitle = `第${dayIndex}天·${shortTitle}`;
+      const videoCompletionRate = doneSet.has(videoId) ? 100 : 0;
+      const qid = quizByVideo.get(videoId);
+      let quizPassRate = 0;
+      if (qid) {
+        quizPassRate = latestPassedByQuiz.get(qid) ? 100 : 0;
+      }
+      barUnits.push({ unitTitle, videoCompletionRate, quizPassRate });
+    }
+
+    return {
+      progress: { completed, incomplete },
+      barUnits,
+      quizTotalInScope,
+      quizPassedCount,
+    };
   }
 
   private async buildVideoQuizStats(
@@ -463,6 +640,7 @@ export class StudentReportService {
     pie: { completed: number; incomplete: number },
     quizTotalInScope: number,
     quizPassedCount: number,
+    mode: "exam_scope" | "task" = "exam_scope",
   ): ReportSummary {
     const totalVideos = pie.completed + pie.incomplete;
     const completedVideos = pie.completed;
@@ -485,13 +663,21 @@ export class StudentReportService {
       .slice(0, 5);
 
     const paragraphs: string[] = [];
-    paragraphs.push(
-      `影片總覽：共 ${totalVideos} 支，已完成 ${completedVideos} 支，整體完成率約 ${videoCompletionRate}%。`,
-    );
-
-    paragraphs.push(
-      `測驗表現：段考範圍內共 ${totalQuizzes} 份測驗，已通過 ${passedQuizzes} 份，整體通過率約 ${quizPassRate}%。`,
-    );
+    if (mode === "task") {
+      paragraphs.push(
+        `本任務影片：共 ${totalVideos} 支，已完成 ${completedVideos} 支，完成率約 ${videoCompletionRate}%。`,
+      );
+      paragraphs.push(
+        `本任務測驗：共 ${totalQuizzes} 份，已通過 ${passedQuizzes} 份，通過率約 ${quizPassRate}%。`,
+      );
+    } else {
+      paragraphs.push(
+        `影片總覽：共 ${totalVideos} 支，已完成 ${completedVideos} 支，整體完成率約 ${videoCompletionRate}%。`,
+      );
+      paragraphs.push(
+        `測驗表現：段考範圍內共 ${totalQuizzes} 份測驗，已通過 ${passedQuizzes} 份，整體通過率約 ${quizPassRate}%。`,
+      );
+    }
 
     if (weakSkills.length > 0) {
       paragraphs.push(

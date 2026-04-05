@@ -14,11 +14,16 @@ export class ReportLinkService {
     expiresInDays?: number | null;
   }): Promise<{ token: string; created: boolean }> {
     const supabase = getSupabaseAdmin();
-    const { data: rows } = await supabase
+    const taskId = input.taskId ?? null;
+
+    let q = supabase
       .from("student_report_tokens")
       .select("token, expires_at, created_at")
       .eq("student_id", input.studentId)
       .order("created_at", { ascending: false });
+    q = taskId === null ? q.is("task_id", null) : q.eq("task_id", taskId);
+
+    const { data: rows } = await q;
 
     const now = Date.now();
     for (const raw of rows ?? []) {
@@ -37,7 +42,7 @@ export class ReportLinkService {
 
     const { error } = await supabase.from("student_report_tokens").insert({
       student_id: input.studentId,
-      task_id: input.taskId ?? null,
+      task_id: taskId,
       token,
       expires_at: expiresAt,
     });

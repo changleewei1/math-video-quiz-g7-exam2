@@ -1,5 +1,12 @@
+import { TaskParentReportLinkButton } from "@/components/admin/TaskParentReportLinkButton";
 import { LearningTasksDbMissing } from "@/components/admin/LearningTasksDbMissing";
-import { getAdminTaskStudentDetailUseCase } from "@/infrastructure/composition";
+import { ReportCharts } from "@/components/report/ReportCharts";
+import { getDefaultExamScopeId } from "@/lib/constants";
+import {
+  getAdminStudentReportUseCase,
+  getAdminTaskStudentDetailUseCase,
+  getRepositories,
+} from "@/infrastructure/composition";
 import {
   getSupabaseErrorMessage,
   looksLikeMissingLearningTasksTable,
@@ -18,6 +25,11 @@ export default async function AdminTaskStudentDetailPage({ params }: Props) {
 
   const { taskId, studentId } = await params;
   const uc = getAdminTaskStudentDetailUseCase();
+  const { examScopes } = getRepositories();
+  const scopes = await examScopes.findAllActive();
+  const envScope = getDefaultExamScopeId();
+  const examScopeId = envScope ?? scopes[0]?.id ?? null;
+  const reportUc = getAdminStudentReportUseCase();
 
   let detail: Awaited<ReturnType<typeof uc.execute>>;
   try {
@@ -33,6 +45,12 @@ export default async function AdminTaskStudentDetailPage({ params }: Props) {
   if (!detail) notFound();
 
   const { task, student, videos } = detail;
+
+  const report = await reportUc.execute({
+    studentId,
+    examScopeId,
+    taskId,
+  });
 
   return (
     <div className="space-y-8">
@@ -55,8 +73,39 @@ export default async function AdminTaskStudentDetailPage({ params }: Props) {
         </p>
       </div>
 
+      {report ? (
+        <section className="space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <h2 className="text-lg font-semibold text-slate-900">家長學習報告連結</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              產生連結並複製給家長；家長開啟後可見與本頁相同任務脈絡下的圖表與摘要（無需登入）。
+            </p>
+            <div className="mt-4">
+              <TaskParentReportLinkButton studentId={studentId} taskId={taskId} />
+            </div>
+          </div>
+
+          {report.scopedToTask ? (
+            <p className="text-sm text-slate-600">
+              以下雷達圖、統計圖與學習建議僅限本任務「{task.title}」之影片與測驗。
+            </p>
+          ) : report.examScope ? (
+            <p className="text-sm text-slate-600">
+              圖表段考範圍：
+              <span className="font-medium text-slate-800">{report.examScope.title}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-amber-800">
+              尚未設定段考 scope 或任務內尚無影片，部分圖表可能為空。
+            </p>
+          )}
+
+          <ReportCharts report={report} />
+        </section>
+      ) : null}
+
       <section className="space-y-6">
-        <h2 className="text-lg font-medium text-slate-800">影片與 AI 學習診斷</h2>
+        <h2 className="text-lg font-medium text-slate-800">影片與 AI 學習診斷（逐題）</h2>
         <p className="text-sm text-slate-600">
           依任務天數與影片標題編號排序；測驗為該影片綁定之最新一次已提交紀錄。
         </p>

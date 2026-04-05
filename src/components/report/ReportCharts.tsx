@@ -29,6 +29,7 @@ type Props = {
 };
 
 export function ReportCharts({ report }: Props) {
+  const taskScope = report.scopedToTask;
   const radarData = report.radar.map((r) => ({
     skill: r.skillName.length > 12 ? `${r.skillName.slice(0, 12)}…` : r.skillName,
     accuracy: r.accuracy,
@@ -52,8 +53,14 @@ export function ReportCharts({ report }: Props) {
   return (
     <div className="space-y-8">
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">技能雷達（測驗正答率）</h2>
-        <p className="mt-1 text-sm text-slate-600">依各 skill 題目答對比例換算為 0～100。</p>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {taskScope ? "本任務 · 技能雷達（測驗正答率）" : "技能雷達（測驗正答率）"}
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          {taskScope
+            ? "僅統計本任務影片所綁定測驗；依各 skill 題目答對比例換算為 0～100。"
+            : "依各 skill 題目答對比例換算為 0～100。"}
+        </p>
         {radarData.length === 0 ? (
           <p className="mt-6 text-sm text-slate-500">尚無測驗作答紀錄。</p>
         ) : (
@@ -90,7 +97,9 @@ export function ReportCharts({ report }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900">影片完成比例</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            {taskScope ? "本任務 · 影片完成比例" : "影片完成比例"}
+          </h2>
           <div className="mt-4 h-56 w-full min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -117,9 +126,13 @@ export function ReportCharts({ report }: Props) {
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900">各單元完成與測驗</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            {taskScope ? "本任務 · 各影片觀看與測驗" : "各單元完成與測驗"}
+          </h2>
           {barData.length === 0 ? (
-            <p className="mt-6 text-sm text-slate-500">無段考範圍單元資料。</p>
+            <p className="mt-6 text-sm text-slate-500">
+              {taskScope ? "尚無任務影片資料。" : "無段考範圍單元資料。"}
+            </p>
           ) : (
             <div className="mt-4 h-64 w-full min-h-[220px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -145,7 +158,9 @@ export function ReportCharts({ report }: Props) {
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">學習摘要</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {taskScope ? "本任務 · 學習建議摘要" : "學習摘要"}
+        </h2>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
           {report.summary.paragraphs.map((p, i) => (
             <li key={i} className="flex gap-2">

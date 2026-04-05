@@ -1,3 +1,4 @@
+import { TaskParentReportLinkButton } from "@/components/admin/TaskParentReportLinkButton";
 import { LearningTasksDbMissing } from "@/components/admin/LearningTasksDbMissing";
 import { getAdminLearningTaskDetailUseCase } from "@/infrastructure/composition";
 import {
@@ -100,6 +101,10 @@ export default async function AdminTaskDetailPage({ params }: { params: Promise<
         <p className="mb-3 text-sm text-slate-600">
           落後：依目前日期應完成之 day_index 內影片尚未觀看完畢，或任務已結束仍未達 100%。
         </p>
+        <p className="mb-3 text-sm text-slate-600">
+          <span className="font-medium text-slate-800">家長學習報告：</span>
+          每位學生可產生專屬連結（綁定本任務），家長開啟後可見此任務脈絡下的觀看與診斷摘要，請複製後傳給家長。
+        </p>
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-100 text-slate-700">
@@ -109,13 +114,14 @@ export default async function AdminTaskDetailPage({ params }: { params: Promise<
                 <th className="px-4 py-2">完成支數</th>
                 <th className="px-4 py-2">完成率</th>
                 <th className="px-4 py-2">落後</th>
+                <th className="px-4 py-2">家長報告</th>
                 <th className="px-4 py-2">操作</th>
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
                     此班級尚無學生資料
                   </td>
                 </tr>
@@ -134,6 +140,9 @@ export default async function AdminTaskDetailPage({ params }: { params: Promise<
                       ) : (
                         <span className="text-slate-500">否</span>
                       )}
+                    </td>
+                    <td className="px-4 py-2 align-top">
+                      <TaskParentReportLinkButton studentId={s.studentId} taskId={taskId} />
                     </td>
                     <td className="px-4 py-2">
                       <Link

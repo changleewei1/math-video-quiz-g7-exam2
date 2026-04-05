@@ -46,20 +46,20 @@ export default async function UnitPage({ params }: Props) {
                 <p className="mt-1 text-xs text-slate-500">
                   完成率 {r.completionRate.toFixed(0)}%
                   {r.isCompleted ? " · 已觀看完畢" : ""}
-                  {r.quizPassed ? " · 測驗通過" : r.canTakeQuiz ? " · 可測驗" : ""}
+                  {r.quizPassed ? " · 診斷通過" : r.canTakeQuiz ? " · 可診斷" : ""}
                 </p>
               </div>
               {r.quizId && (
                 <Link
                   href={`/student/quiz/${r.quizId}`}
-                  className={`inline-flex min-h-9 items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
+                  className={`inline-flex min-h-9 items-center rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-red-700 active:scale-[0.98] ${
                     r.canTakeQuiz
-                      ? "interactive-btn bg-teal-600 text-white"
-                      : "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-500"
+                      ? "bg-red-600 text-white"
+                      : "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-500 shadow-none"
                   }`}
                   aria-disabled={!r.canTakeQuiz}
                 >
-                  理解檢核
+                  AI學習診斷
                 </Link>
               )}
             </div>

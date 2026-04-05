@@ -9,7 +9,8 @@
     "lint": "eslint",
     "import:playlists": "tsx --tsconfig tsconfig.json scripts/import-playlists.ts",
     "seed:quiz-questions": "tsx --tsconfig tsconfig.json scripts/seed-quiz-questions-from-bank.ts",
-    "seed:g7-students": "tsx --tsconfig tsconfig.json scripts/seed-g7-class-students.ts"
+    "seed:g7-students": "tsx --tsconfig tsconfig.json scripts/seed-g7-class-students.ts",
+    "rename:quiz-titles-ai": "tsx --tsconfig tsconfig.json scripts/rename-quiz-titles-ai-diagnosis.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.0",

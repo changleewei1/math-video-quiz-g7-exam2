@@ -84,6 +84,23 @@ function taskDayIndex(startYmd: string, todayYmd: string): number {
   return diff + 1;
 }
 
+/** 依標題開頭數字排序（例：「1 國中…」「6~7 國中…」取首個數字） */
+function leadingNumberFromVideoTitle(title: string): number {
+  const t = title.trim();
+  const m = t.match(/^(\d+)(?:~\d+)?/);
+  if (m) return parseInt(m[1], 10);
+  return Number.MAX_SAFE_INTEGER;
+}
+
+function sortTaskDayVideosByTitle(videos: StudentTaskDayVideo[]): StudentTaskDayVideo[] {
+  return [...videos].sort((a, b) => {
+    const ka = leadingNumberFromVideoTitle(a.title);
+    const kb = leadingNumberFromVideoTitle(b.title);
+    if (ka !== kb) return ka - kb;
+    return a.title.localeCompare(b.title, "zh-Hant");
+  });
+}
+
 function taskPhase(
   startYmd: string,
   endYmd: string,
@@ -290,7 +307,7 @@ export class LearningTaskService {
         .sort((a, b) => a - b)
         .map((dayIndex) => ({
           dayIndex,
-          videos: dayMap.get(dayIndex)!,
+          videos: sortTaskDayVideosByTitle(dayMap.get(dayIndex)!),
         }));
 
       const totalVideos = tvs.length;

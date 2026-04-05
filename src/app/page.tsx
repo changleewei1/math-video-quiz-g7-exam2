@@ -15,7 +15,7 @@ export default function Home() {
       <HomeChartsSection />
       <HomeFooterCta />
       <footer className="mt-auto border-t border-slate-200/80 bg-white px-4 py-8 text-center text-xs leading-relaxed text-slate-500 sm:px-6">
-        <p>國一數第二次段考｜影片與理解檢核</p>
+        <p>國一數第二次段考｜影片與 AI學習診斷</p>
       </footer>
     </div>
   );

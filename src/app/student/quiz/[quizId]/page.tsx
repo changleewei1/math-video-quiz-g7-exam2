@@ -70,7 +70,7 @@ export default function QuizPage() {
       <div className="mb-6">
         <StudentBackLink href="/student/dashboard">返回學習總覽</StudentBackLink>
       </div>
-      <h1 className="text-xl font-semibold text-slate-900">理解檢核</h1>
+      <h1 className="text-xl font-semibold text-slate-900">AI學習診斷</h1>
       <p className="mt-1 text-sm text-slate-500">共 3 題單選，答對 2 題以上通過</p>
       {err && (
         <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</p>
@@ -114,7 +114,7 @@ export default function QuizPage() {
             <button
               type="button"
               onClick={() => void submit()}
-              className="interactive-btn rounded-lg bg-teal-600 px-5 py-2.5 font-medium text-white"
+              className="rounded-lg bg-red-600 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-red-700 active:scale-[0.98]"
             >
               提交答案
             </button>

@@ -26,10 +26,10 @@ export function HomeHero() {
           國一數學｜段考複習
         </p>
         <h1 className="mt-4 text-balance text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
-          影片預習 × 理解檢核
+          影片預習 × AI學習診斷
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-slate-600 sm:text-lg">
-          依進度解鎖測驗，掌握每一段考重點。
+          依進度解鎖 AI學習診斷，掌握每一段考重點。
         </p>
         <div className="mt-10 flex w-full max-w-md flex-col items-stretch justify-center gap-3 sm:mx-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4">
           <Link

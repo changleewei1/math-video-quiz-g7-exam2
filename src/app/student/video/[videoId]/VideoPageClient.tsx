@@ -46,7 +46,7 @@ export function VideoPageClient({
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.canTakeQuiz) {
         setUnlocked(true);
-        setStatus("已達觀看門檻，可進行理解檢核。");
+        setStatus("已達觀看門檻，可進行 AI學習診斷。");
       }
     },
     [videoId],
@@ -63,18 +63,18 @@ export function VideoPageClient({
         initialSeconds={initialPosition}
         onProgressSync={onProgressSync}
       />
-      {status && <p className="text-sm text-teal-800">{status}</p>}
+      {status && <p className="text-sm text-red-800">{status}</p>}
       <div className="flex flex-wrap gap-3">
         {quizId && (
           <Link
             href={`/student/quiz/${quizId}`}
-            className={`inline-flex min-h-11 items-center rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`inline-flex min-h-11 items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-red-700 active:scale-[0.98] ${
               unlocked
-                ? "interactive-btn bg-teal-600 text-white"
-                : "pointer-events-none bg-slate-200 text-slate-500"
+                ? "bg-red-600 text-white"
+                : "pointer-events-none bg-slate-200 text-slate-500 shadow-none"
             }`}
           >
-            前往理解檢核（需觀看 ≥90%）
+            前往 AI學習診斷（需觀看 ≥90%）
           </Link>
         )}
         <Link

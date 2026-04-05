@@ -97,7 +97,7 @@ export function FeaturesSection() {
         <header className="text-center">
           <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">系統特色</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600 md:text-base">
-            從預習到檢核，串起資料與教學決策的一條龍設計。
+            從預習到 AI學習診斷，串起資料與教學決策的一條龍設計。
           </p>
         </header>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

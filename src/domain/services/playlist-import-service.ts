@@ -176,7 +176,7 @@ export class PlaylistImportService {
 
       const quizInsert: QuizInsert = {
         video_id: videoId,
-        title: `${item.title} — 理解檢核`,
+        title: `${item.title} — AI學習診斷`,
         description: "觀看 90% 後解鎖",
         pass_score: 2,
         question_count: 3,

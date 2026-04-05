@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
+import { QuizResultBackButton } from "@/components/student/QuizResultBackButton";
 import { StudentBackLink } from "@/components/student/StudentBackLink";
 import { getQuizAttemptDetailUseCase } from "@/infrastructure/composition";
 import { getStudentSession } from "@/lib/session";
@@ -67,12 +67,9 @@ export default async function QuizResultPage({ params }: Props) {
           );
         })}
       </ul>
-      <Link
-        href="/student/dashboard"
-        className="interactive-btn mt-8 inline-flex min-h-11 items-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white"
-      >
-        回儀表板
-      </Link>
+      <QuizResultBackButton
+        fallbackHref={video ? `/student/video/${video.id}` : "/student/dashboard"}
+      />
     </main>
   );
 }

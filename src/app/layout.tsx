@@ -9,8 +9,8 @@ const noto = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "國一數第二次段考｜影片與理解檢核",
-  description: "影片觀看進度與單元理解檢核（MVP）",
+  title: "國一數第二次段考｜影片與 AI學習診斷",
+  description: "影片觀看進度與 AI學習診斷（MVP）",
 };
 
 export const viewport: Viewport = {

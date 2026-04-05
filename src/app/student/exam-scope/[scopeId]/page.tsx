@@ -22,7 +22,7 @@ export default async function ExamScopePage({ params }: Props) {
         <StudentBackLink href="/student/dashboard">返回學習總覽</StudentBackLink>
       </div>
       <h1 className="text-2xl font-semibold text-slate-900">{data.scope.title}</h1>
-      <p className="mt-2 text-slate-600">{data.scope.description ?? "請依序完成各單元影片與理解檢核。"}</p>
+      <p className="mt-2 text-slate-600">{data.scope.description ?? "請依序完成各單元影片與 AI學習診斷。"}</p>
       <ul className="mt-8 space-y-3">
         {data.units.map((u) => (
           <li key={u.id}>

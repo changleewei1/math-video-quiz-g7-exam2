@@ -109,12 +109,13 @@ export default async function AdminTaskDetailPage({ params }: { params: Promise<
                 <th className="px-4 py-2">完成支數</th>
                 <th className="px-4 py-2">完成率</th>
                 <th className="px-4 py-2">落後</th>
+                <th className="px-4 py-2">操作</th>
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                     此班級尚無學生資料
                   </td>
                 </tr>
@@ -133,6 +134,14 @@ export default async function AdminTaskDetailPage({ params }: { params: Promise<
                       ) : (
                         <span className="text-slate-500">否</span>
                       )}
+                    </td>
+                    <td className="px-4 py-2">
+                      <Link
+                        href={`/admin/tasks/${taskId}/students/${s.studentId}`}
+                        className="interactive-nav font-medium text-teal-700 underline decoration-teal-700/40 underline-offset-2"
+                      >
+                        查看詳情
+                      </Link>
                     </td>
                   </tr>
                 ))

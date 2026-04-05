@@ -1,4 +1,7 @@
 import type { LearningTaskRepository, TaskVideoInsert } from "@/domain/repositories/learning-task-repository";
+import type { QuizAttemptRepository } from "@/domain/repositories/quiz-attempt-repository";
+import type { QuizQuestionRepository } from "@/domain/repositories/quiz-question-repository";
+import type { QuizRepository } from "@/domain/repositories/quiz-repository";
 import type { StudentRepository } from "@/domain/repositories/student-repository";
 import type { StudentTaskProgressRepository } from "@/domain/repositories/student-task-progress-repository";
 import type { VideoRepository } from "@/domain/repositories/video-repository";
@@ -44,6 +47,43 @@ export type AdminTaskDetail = {
   };
   videos: { videoId: string; dayIndex: number; title: string }[];
   students: AdminTaskStudentRow[];
+};
+
+/** 老師檢視：單一學生在該任務內每支影片的觀看與 AI 學習診斷作答 */
+export type AdminTaskStudentVideoRow = {
+  dayIndex: number;
+  videoId: string;
+  title: string;
+  watchCompleted: boolean;
+  watchCompletedAt: string | null;
+  quiz: null | {
+    quizId: string;
+    passScore: number;
+    questionCount: number;
+    submitted: boolean;
+    score: number | null;
+    isPassed: boolean | null;
+    submittedAt: string | null;
+    answers: {
+      questionText: string;
+      skillCode: string;
+      selectedAnswer: string;
+      correctAnswer: string;
+      isCorrect: boolean;
+    }[];
+  };
+};
+
+export type AdminTaskStudentDetail = {
+  task: {
+    id: string;
+    title: string;
+    startDate: string;
+    endDate: string;
+    className: string;
+  };
+  student: { id: string; studentCode: string; name: string };
+  videos: AdminTaskStudentVideoRow[];
 };
 
 export type StudentTaskDayVideo = {
@@ -139,6 +179,9 @@ export class LearningTaskService {
     private readonly taskProgressRepo: StudentTaskProgressRepository,
     private readonly students: StudentRepository,
     private readonly videos: VideoRepository,
+    private readonly quizzes: QuizRepository,
+    private readonly quizAttempts: QuizAttemptRepository,
+    private readonly quizQuestions: QuizQuestionRepository,
   ) {}
 
   /** 影片觀看完成時由 VideoTrackingService 呼叫 */
@@ -335,5 +378,112 @@ export class LearningTaskService {
 
     out.sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
     return out;
+  }
+
+  /**
+   * 老師：單一學生在此任務中，各影片觀看進度與該影片 AI 學習診斷（測驗）作答情形。
+   * 學生須與任務班級一致，否則回傳 null。
+   */
+  async getAdminTaskStudentDetail(
+    taskId: string,
+    studentId: string,
+  ): Promise<AdminTaskStudentDetail | null> {
+    const task = await this.taskRepo.findById(taskId);
+    if (!task) return null;
+    const student = await this.students.findById(studentId);
+    if (!student || student.className !== task.class_name) return null;
+
+    const tvs = await this.taskRepo.findTaskVideos(taskId);
+    const progressRows = await this.taskProgressRepo.listByTaskAndStudent(taskId, studentId);
+    const progressByVideo = new Map<string, StudentTaskProgressRow>();
+    for (const p of progressRows) {
+      progressByVideo.set(p.video_id, p);
+    }
+
+    const rows: AdminTaskStudentVideoRow[] = [];
+
+    for (const tv of tvs) {
+      const v = await this.videos.findById(tv.video_id);
+      const title = v?.title ?? "(影片)";
+      const pr = progressByVideo.get(tv.video_id);
+      const watchCompleted = pr?.is_completed ?? false;
+      const watchCompletedAt = pr?.completed_at ?? null;
+
+      const quizEntity = await this.quizzes.findByVideoId(tv.video_id);
+      let quizBlock: AdminTaskStudentVideoRow["quiz"] = null;
+
+      if (quizEntity) {
+        const attempt = await this.quizAttempts.findLatestByStudentAndQuiz(studentId, quizEntity.id);
+        const submitted = Boolean(attempt?.submittedAt);
+        const answerList: {
+          questionText: string;
+          skillCode: string;
+          selectedAnswer: string;
+          correctAnswer: string;
+          isCorrect: boolean;
+        }[] = [];
+        if (submitted && attempt) {
+          const questions = await this.quizQuestions.findByQuizId(quizEntity.id);
+          const sorted = [...questions].sort((a, b) => a.sortOrder - b.sortOrder);
+          const ansRows = await this.quizAttempts.listAnswersByAttemptId(attempt.id);
+          const byQ = new Map(ansRows.map((r) => [r.question_id, r]));
+          for (const q of sorted) {
+            const ar = byQ.get(q.id);
+            answerList.push({
+              questionText: q.questionText,
+              skillCode: q.skillCode,
+              selectedAnswer: ar?.selected_answer ?? "—",
+              correctAnswer: q.correctAnswer,
+              isCorrect: ar?.is_correct ?? false,
+            });
+          }
+        }
+
+        quizBlock = {
+          quizId: quizEntity.id,
+          passScore: quizEntity.passScore,
+          questionCount: quizEntity.questionCount,
+          submitted,
+          score: submitted && attempt ? attempt.score : null,
+          isPassed: submitted && attempt ? attempt.isPassed : null,
+          submittedAt:
+            submitted && attempt?.submittedAt ? attempt.submittedAt.toISOString() : null,
+          answers: answerList,
+        };
+      }
+
+      rows.push({
+        dayIndex: tv.day_index,
+        videoId: tv.video_id,
+        title,
+        watchCompleted,
+        watchCompletedAt,
+        quiz: quizBlock,
+      });
+    }
+
+    rows.sort((a, b) => {
+      if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
+      return (
+        leadingNumberFromVideoTitle(a.title) - leadingNumberFromVideoTitle(b.title) ||
+        a.title.localeCompare(b.title, "zh-Hant")
+      );
+    });
+
+    return {
+      task: {
+        id: task.id,
+        title: task.title,
+        startDate: task.start_date,
+        endDate: task.end_date,
+        className: task.class_name,
+      },
+      student: {
+        id: student.id,
+        studentCode: student.studentCode,
+        name: student.name,
+      },
+      videos: rows,
+    };
   }
 }

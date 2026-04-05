@@ -1,6 +1,7 @@
 import { GetExamScopeUseCase } from "@/domain/usecases/get-exam-scope-use-case";
 import { CreateLearningTaskUseCase } from "@/domain/usecases/create-learning-task-use-case";
 import { GetAdminLearningTaskDetailUseCase } from "@/domain/usecases/get-admin-learning-task-detail-use-case";
+import { GetAdminTaskStudentDetailUseCase } from "@/domain/usecases/get-admin-task-student-detail-use-case";
 import { GetStudentLearningTasksUseCase } from "@/domain/usecases/get-student-learning-tasks-use-case";
 import { ListLearningTasksUseCase } from "@/domain/usecases/list-learning-tasks-use-case";
 import { GetQuizAttemptDetailUseCase } from "@/domain/usecases/get-quiz-attempt-detail-use-case";
@@ -61,6 +62,9 @@ export function getLearningTaskService() {
     r.studentTaskProgress,
     r.students,
     r.videos,
+    r.quizzes,
+    r.quizAttempts,
+    r.quizQuestions,
   );
 }
 
@@ -171,6 +175,10 @@ export function getListLearningTasksUseCase() {
 
 export function getAdminLearningTaskDetailUseCase() {
   return new GetAdminLearningTaskDetailUseCase(getLearningTaskService());
+}
+
+export function getAdminTaskStudentDetailUseCase() {
+  return new GetAdminTaskStudentDetailUseCase(getLearningTaskService());
 }
 
 export function getStudentLearningTasksUseCase() {

@@ -5,6 +5,7 @@ import type { QuizRepository } from "@/domain/repositories/quiz-repository";
 import type { StudentRepository } from "@/domain/repositories/student-repository";
 import type { StudentTaskProgressRepository } from "@/domain/repositories/student-task-progress-repository";
 import type { VideoRepository } from "@/domain/repositories/video-repository";
+import { leadingNumberFromVideoTitle } from "@/lib/video-title-sort";
 import type { StudentTaskProgressRow } from "@/types/database";
 
 export type CreateLearningTaskInput = {
@@ -123,14 +124,6 @@ function taskDayIndex(startYmd: string, todayYmd: string): number {
   const b = new Date(`${todayYmd}T12:00:00`);
   const diff = Math.round((b.getTime() - a.getTime()) / 86400000);
   return diff + 1;
-}
-
-/** 依標題開頭數字排序（例：「1 國中…」「6~7 國中…」取首個數字） */
-function leadingNumberFromVideoTitle(title: string): number {
-  const t = title.trim();
-  const m = t.match(/^(\d+)(?:~\d+)?/);
-  if (m) return parseInt(m[1], 10);
-  return Number.MAX_SAFE_INTEGER;
 }
 
 function sortTaskDayVideosByTitle(videos: StudentTaskDayVideo[]): StudentTaskDayVideo[] {

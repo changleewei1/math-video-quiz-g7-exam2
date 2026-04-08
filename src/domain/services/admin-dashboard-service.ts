@@ -1,3 +1,4 @@
+import { compareVideoTitleNumeric } from "@/lib/video-title-sort";
 import { getSupabaseAdmin } from "@/infrastructure/supabase/admin-client";
 
 export type StudentOverviewRow = {
@@ -181,6 +182,7 @@ export class AdminDashboardService {
         completionRate,
       });
     }
+    out.sort((a, b) => compareVideoTitleNumeric(a.title, b.title));
     return out;
   }
 

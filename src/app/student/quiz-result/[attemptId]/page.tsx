@@ -1,3 +1,4 @@
+import { QuizQuestionStem } from "@/components/quiz/QuizQuestionDisplay";
 import { redirect, notFound } from "next/navigation";
 import { QuizResultBackButton } from "@/components/student/QuizResultBackButton";
 import { StudentBackLink } from "@/components/student/StudentBackLink";
@@ -51,9 +52,11 @@ export default async function QuizResultPage({ params }: Props) {
               key={q.id}
               className="rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-sm"
             >
-              <p className="font-medium text-slate-900">
-                {idx + 1}. {q.questionText}
-              </p>
+              <QuizQuestionStem
+                index={idx}
+                questionText={q.questionText}
+                questionImageUrl={q.questionImageUrl}
+              />
               <p className="mt-1 text-xs text-slate-500">技能：{q.skillCode}</p>
               <p className="mt-2">
                 你的答案：{ans?.selected_answer ?? "—"}{" "}

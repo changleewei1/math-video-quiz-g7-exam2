@@ -186,7 +186,19 @@ export default async function AdminTaskStudentDetailPage({ params }: Props) {
                         <tbody>
                           {row.quiz.answers.map((a, i) => (
                             <tr key={i} className="border-t border-slate-100">
-                              <td className="max-w-xs px-3 py-2 text-slate-800">{a.questionText}</td>
+                              <td className="max-w-xs px-3 py-2 text-slate-800">
+                                {a.questionText ? (
+                                  <span className="block whitespace-pre-wrap">{a.questionText}</span>
+                                ) : null}
+                                {a.questionImageUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={a.questionImageUrl}
+                                    alt=""
+                                    className="mt-1 max-h-24 max-w-full rounded border border-slate-200 object-contain"
+                                  />
+                                ) : null}
+                              </td>
                               <td className="whitespace-nowrap px-3 py-2 text-xs text-slate-600">
                                 {a.skillCode}
                               </td>

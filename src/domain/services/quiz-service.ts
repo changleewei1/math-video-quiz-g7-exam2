@@ -1,3 +1,4 @@
+import type { QuizQuestion } from "@/domain/entities";
 import { QuizAttempt, type AnswerMap } from "@/domain/entities";
 import type {
   QuizAttemptRepository,
@@ -6,6 +7,41 @@ import type {
 import type { QuizQuestionRepository } from "@/domain/repositories";
 import type { QuizRepository } from "@/domain/repositories";
 import type { VideoProgressRepository } from "@/domain/repositories";
+
+/** 給學生端 API／前端顯示（含圖片 URL） */
+export type QuizQuestionStudentDto = {
+  id: string;
+  questionText: string;
+  questionImageUrl: string | null;
+  choiceA: string;
+  choiceB: string;
+  choiceC: string;
+  choiceD: string;
+  choiceAImageUrl: string | null;
+  choiceBImageUrl: string | null;
+  choiceCImageUrl: string | null;
+  choiceDImageUrl: string | null;
+  sortOrder: number;
+  skillCode: string;
+};
+
+function toStudentDto(q: QuizQuestion): QuizQuestionStudentDto {
+  return {
+    id: q.id,
+    questionText: q.questionText,
+    questionImageUrl: q.questionImageUrl,
+    choiceA: q.choiceA,
+    choiceB: q.choiceB,
+    choiceC: q.choiceC,
+    choiceD: q.choiceD,
+    choiceAImageUrl: q.choiceAImageUrl,
+    choiceBImageUrl: q.choiceBImageUrl,
+    choiceCImageUrl: q.choiceCImageUrl,
+    choiceDImageUrl: q.choiceDImageUrl,
+    sortOrder: q.sortOrder,
+    skillCode: q.skillCode,
+  };
+}
 
 export class QuizService {
   constructor(
@@ -23,16 +59,7 @@ export class QuizService {
       return { quiz, questions: [] as never[], unlocked: false, videoId: quiz.videoId };
     }
     const questions = await this.questionRepo.findByQuizId(quiz.id);
-    const sanitized = questions.map((q) => ({
-      id: q.id,
-      questionText: q.questionText,
-      choiceA: q.choiceA,
-      choiceB: q.choiceB,
-      choiceC: q.choiceC,
-      choiceD: q.choiceD,
-      sortOrder: q.sortOrder,
-      skillCode: q.skillCode,
-    }));
+    const sanitized = questions.map(toStudentDto);
     return { quiz, questions: sanitized, unlocked: true, videoId: quiz.videoId };
   }
 
@@ -44,16 +71,7 @@ export class QuizService {
       return { quiz, questions: [] as never[], unlocked: false };
     }
     const questions = await this.questionRepo.findByQuizId(quiz.id);
-    const sanitized = questions.map((q) => ({
-      id: q.id,
-      questionText: q.questionText,
-      choiceA: q.choiceA,
-      choiceB: q.choiceB,
-      choiceC: q.choiceC,
-      choiceD: q.choiceD,
-      sortOrder: q.sortOrder,
-      skillCode: q.skillCode,
-    }));
+    const sanitized = questions.map(toStudentDto);
     return { quiz, questions: sanitized, unlocked: true };
   }
 

@@ -66,6 +66,7 @@ export type AdminTaskStudentVideoRow = {
     submittedAt: string | null;
     answers: {
       questionText: string;
+      questionImageUrl: string | null;
       skillCode: string;
       selectedAnswer: string;
       correctAnswer: string;
@@ -417,6 +418,7 @@ export class LearningTaskService {
         const submitted = Boolean(attempt?.submittedAt);
         const answerList: {
           questionText: string;
+          questionImageUrl: string | null;
           skillCode: string;
           selectedAnswer: string;
           correctAnswer: string;
@@ -431,6 +433,7 @@ export class LearningTaskService {
             const ar = byQ.get(q.id);
             answerList.push({
               questionText: q.questionText,
+              questionImageUrl: q.questionImageUrl,
               skillCode: q.skillCode,
               selectedAnswer: ar?.selected_answer ?? "—",
               correctAnswer: q.correctAnswer,

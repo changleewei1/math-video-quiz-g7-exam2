@@ -104,17 +104,22 @@ export function quizQuestionFromRow(r: QuizQuestionRow): QuizQuestion {
   return new QuizQuestion(
     r.id,
     r.quiz_id,
-    r.question_text,
+    r.question_text ?? "",
     r.question_type,
-    r.choice_a,
-    r.choice_b,
-    r.choice_c,
-    r.choice_d,
+    r.choice_a ?? "",
+    r.choice_b ?? "",
+    r.choice_c ?? "",
+    r.choice_d ?? "",
     r.correct_answer,
     r.explanation,
     r.sort_order,
     r.difficulty,
     r.skill_code,
+    r.question_image_url ?? null,
+    r.choice_a_image_url ?? null,
+    r.choice_b_image_url ?? null,
+    r.choice_c_image_url ?? null,
+    r.choice_d_image_url ?? null,
   );
 }
 

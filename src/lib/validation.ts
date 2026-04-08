@@ -49,3 +49,29 @@ export const createLearningTaskBodySchema = z
     message: "結束日不可早於開始日",
     path: ["endDate"],
   });
+
+const optionalImageUrl = z.union([z.string().url(), z.null()]);
+
+export const quizQuestionPatchSchema = z.object({
+  questionText: z.string().optional(),
+  questionImageUrl: optionalImageUrl.optional(),
+  choiceA: z.string().optional(),
+  choiceB: z.string().optional(),
+  choiceC: z.string().optional(),
+  choiceD: z.string().optional(),
+  choiceAImageUrl: optionalImageUrl.optional(),
+  choiceBImageUrl: optionalImageUrl.optional(),
+  choiceCImageUrl: optionalImageUrl.optional(),
+  choiceDImageUrl: optionalImageUrl.optional(),
+  correctAnswer: z.enum(["A", "B", "C", "D"]).optional(),
+  skillCode: z.string().min(1).optional(),
+  explanation: z.string().nullable().optional(),
+});
+
+export const quizAssetUploadFieldSchema = z.enum([
+  "question",
+  "choice_a",
+  "choice_b",
+  "choice_c",
+  "choice_d",
+]);

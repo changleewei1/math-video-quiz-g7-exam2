@@ -86,18 +86,23 @@ export type QuizRow = {
 export type QuizQuestionRow = {
   id: string;
   quiz_id: string;
-  question_text: string;
+  question_text: string | null;
   question_type: string;
-  choice_a: string;
-  choice_b: string;
-  choice_c: string;
-  choice_d: string;
+  choice_a: string | null;
+  choice_b: string | null;
+  choice_c: string | null;
+  choice_d: string | null;
   correct_answer: string;
   explanation: string | null;
   sort_order: number;
   difficulty: string | null;
   skill_code: string;
   created_at: string;
+  question_image_url?: string | null;
+  choice_a_image_url?: string | null;
+  choice_b_image_url?: string | null;
+  choice_c_image_url?: string | null;
+  choice_d_image_url?: string | null;
 };
 
 export type StudentQuizAttemptRow = {

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminDashboardService, getRepositories } from "@/infrastructure/composition";
 import { getAdminSession } from "@/lib/session";
@@ -17,7 +18,15 @@ export default async function AdminVideoDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-slate-900">{video?.title ?? videoId}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-slate-900">{video?.title ?? videoId}</h1>
+        <Link
+          href={`/admin/video-tracking/videos/${videoId}/quiz`}
+          className="interactive-nav shrink-0 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900 hover:bg-teal-100"
+        >
+          編輯 AI 測驗題目
+        </Link>
+      </div>
       <section>
         <h2 className="font-medium text-slate-800">Skill 答題表現</h2>
         <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">

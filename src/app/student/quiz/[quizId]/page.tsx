@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { QuizChoiceLabel, QuizQuestionStem } from "@/components/quiz/QuizQuestionDisplay";
 import { useParams, useRouter } from "next/navigation";
 import { StudentBackLink } from "@/components/student/StudentBackLink";
 import { useEffect, useState } from "react";
@@ -8,10 +8,15 @@ import { useEffect, useState } from "react";
 type Q = {
   id: string;
   questionText: string;
+  questionImageUrl: string | null;
   choiceA: string;
   choiceB: string;
   choiceC: string;
   choiceD: string;
+  choiceAImageUrl: string | null;
+  choiceBImageUrl: string | null;
+  choiceCImageUrl: string | null;
+  choiceDImageUrl: string | null;
   sortOrder: number;
   skillCode: string;
 };
@@ -78,30 +83,34 @@ export default function QuizPage() {
       <ol className="mt-8 space-y-8">
         {questions.map((q, idx) => (
           <li key={q.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="font-medium text-slate-900">
-              {idx + 1}. {q.questionText}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">技能：{q.skillCode}</p>
-            <div className="mt-3 space-y-2">
+            <QuizQuestionStem
+              index={idx}
+              questionText={q.questionText}
+              questionImageUrl={q.questionImageUrl}
+            />
+            <p className="mt-2 text-xs text-slate-500">技能：{q.skillCode}</p>
+            <div className="mt-3 space-y-3">
               {(
                 [
-                  ["A", q.choiceA],
-                  ["B", q.choiceB],
-                  ["C", q.choiceC],
-                  ["D", q.choiceD],
+                  ["A", q.choiceA, q.choiceAImageUrl],
+                  ["B", q.choiceB, q.choiceBImageUrl],
+                  ["C", q.choiceC, q.choiceCImageUrl],
+                  ["D", q.choiceD, q.choiceDImageUrl],
                 ] as const
-              ).map(([k, label]) => (
-                <label key={k} className="flex cursor-pointer items-center gap-2 text-sm">
+              ).map(([k, label, img]) => (
+                <label
+                  key={k}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-1 py-1 text-sm has-[:checked]:border-teal-200 has-[:checked]:bg-teal-50/50"
+                >
                   <input
                     type="radio"
                     name={q.id}
                     value={k}
+                    className="mt-1"
                     checked={answers[q.id] === k}
                     onChange={() => setAnswers((a) => ({ ...a, [q.id]: k }))}
                   />
-                  <span>
-                    {k}. {label}
-                  </span>
+                  <QuizChoiceLabel letter={k} text={label} imageUrl={img} />
                 </label>
               ))}
             </div>
